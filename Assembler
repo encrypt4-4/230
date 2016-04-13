@@ -1,0 +1,8 @@
+Assembler for assembly code to binary/hex 
+
+1. Map instruction to binary key, then convert that to hex
+2. Convert values stored with each instruction to binary then to hex
+3.Has to determine the type of instruction first. 
+4.concatonate all converted to one hex line
+5. write to mip file
+6. add and recompile project with new mip file
