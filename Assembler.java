@@ -26,7 +26,7 @@ public class Assembler {
 	private String opCode;//Instruction Op codes
 	private String registerCode;//register files input
 	private String hex;//instruction output in hex
-	private String instruction;//instruction input in assembly
+	private String instruction[];//instruction input in assembly
 	private String sBit;//s bit flag
 	private String src;//source register
 	private String dst;//destination register
@@ -75,10 +75,10 @@ public class Assembler {
 		return hex;
 	}
 	//Determines which operation is being used
-	public void setType(String instruction) throws BadInstructionException
+	public void setType(String opCode) throws BadInstructionException
 	{
 
-		switch(instruction.substring(0,2))
+		switch(this.opCode.substring(0,2))
 		{
 		case "00":{
 			this.type = "d";
@@ -105,6 +105,7 @@ public class Assembler {
 	//takes the instruction input
 	public void setInstruction(String inst)
 	{
+		switch()
 		
 
 	}
@@ -114,18 +115,22 @@ public class Assembler {
 		this.sBit = "1"; //sets the s bit to one when necessary
 	}
 	//set the register bits if necessary from instruction
-	public void setRegisters(String instruction)
+	public void setRegisters()
 	{
 		switch(this.type)
 		{
 		case "d":
 		{
-			//TODO set registers for double operation instructions
+			
 		}
 		case "s":
 		{
 			//TODO set register for single operation, locate immediate
 		}
+		case "j":
+			{
+				
+			}
 		default:
 		}
 
