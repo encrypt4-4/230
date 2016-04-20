@@ -61,6 +61,24 @@ public class Assembler {
 		//Jump instruction table
 		INSTRUCTION_OP.put("jeq", "10000");
 		INSTRUCTION_OP.put("jl", "00001");
+		
+		//registers table r0-r15
+		REGISTER_LOCATIONS("r0", "0000");
+		REGISTER_LOCATIONS("r1", "0001");
+		REGISTER_LOCATIONS("r2", "0010");
+		REGISTER_LOCATIONS("r3", "0011");
+		REGISTER_LOCATIONS("r4", "0100");
+		REGISTER_LOCATIONS("r5", "0101");
+		REGISTER_LOCATIONS("r6", "0110");
+		REGISTER_LOCATIONS("r7", "0111");
+		REGISTER_LOCATIONS("r8", "1000");
+		REGISTER_LOCATIONS("r9", "1001");
+		REGISTER_LOCATIONS("r10", "1010");
+		REGISTER_LOCATIONS("r11", "1011");
+		REGISTER_LOCATIONS("r12", "1100");
+		REGISTER_LOCATIONS("r13", "1101");
+		REGISTER_LOCATIONS("r14", "1110");
+		REGISTER_LOCAtiONS("r15", "1111");
 
 	}
 
@@ -105,10 +123,7 @@ public class Assembler {
 	//takes the instruction input
 	public void setInstruction()
 	{
-		switch(instruction[0])
-		{
-			
-		}
+		//TODO look up hash map usage instructions to retrieve hash value and set opcode
 		
 
 	}
