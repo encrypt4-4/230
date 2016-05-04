@@ -1,4 +1,8 @@
+import java.util.InputMismatchException;
 import java.util.Scanner;
+
+import javax.print.attribute.standard.Destination;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -35,7 +39,7 @@ public class AssemblerDriver {
 			mif.append("0 \t:\t000000;\n");
 		}
 		catch(Exception e){
-			System.out.println("Fatal Error. Could not create MIF file." );
+			System.err.println("Fatal Error. Could not create MIF file." );
 			e.printStackTrace();
 			instruction.close();
 			System.exit(0);
@@ -43,17 +47,29 @@ public class AssemblerDriver {
 		}
 
 		do{
+			try{
 			line ++;
+			assemble.setImmediate(0);
+			hex = "";
+			}
+			catch(Exception e){
+				System.err.println("Reset errors: could not reset for new instruction");
+				e.printStackTrace();
+				System.err.println("Fatal error: shutting down...");
+				instruction.close();
+				System.exit(0);
+			}
 
 			do{
 				System.out.println("Please type which operation you would liked to use (add, sub, etc.)");
 				//phase 1 of assembling the instruction, setting the operation from here the type is determined and the conditions
 				try{
+					valid = true;
 					assemble.setOperation(instruction.next().toLowerCase());
 				}
 				catch (Exception e){
 					valid = false;
-					System.out.println("operation entry error please try again!");
+					System.err.println("operation entry error please try again!");
 					continue;
 				}
 
@@ -61,6 +77,10 @@ public class AssemblerDriver {
 				boolean valid2 = true;
 				if(valid){
 					do{
+						int immediate = 0;
+						String source = "";
+						String destination = "";
+						valid2 = true;
 
 
 						try{
@@ -68,28 +88,27 @@ public class AssemblerDriver {
 
 							case "d":
 								System.out.println("Please enter a source register (r2, r6, etc)");
-								String source = instruction.next().toLowerCase();
+								source = instruction.next().toLowerCase();
+
 
 								System.out.println("Please enter a destination register (r2, r6, etc)");
-								String destination = instruction.next().toLowerCase();
+								destination = instruction.next().toLowerCase();
+
 
 								assemble.setRegister(source, destination);
 
-								int immediate = 0;
+
 								if(assemble.getImmediate() == 0){
 									System.out.println("Please enter an immediate value(0, 5, etc.)");
 									immediate = instruction.nextInt();
 									assemble.setImmediate(immediate);
 								}
+
 								break;
 							case "s":
 								System.out.println("Please enter a source register (r2, r6, etc)");
 								String source2 = instruction.next().toLowerCase();
-
-								System.out.println("Please enter a destination register (r2, r6, etc)");
-								String destination2 = source2; //error prevention, currently doesn't allow destination to be null
-
-								assemble.setRegister(source2, destination2);
+								assemble.setRegister(source2);
 								break;
 							case "j":
 								System.out.println("Please enter which pc location you would like to jumb back to(0, 5, etc)");
@@ -98,12 +117,12 @@ public class AssemblerDriver {
 								break;
 							default:
 								valid2 = false;
-								System.out.println("your instrucction was not valid");
-								continue;
+								System.out.println("your instruction was not valid");
 							}
 						}
 						catch(Exception e){
-							System.out.println("something went wrong with setting the register, please try again!");
+							System.err.println("something went wrong with setting the register, please try again!");
+							e.printStackTrace();
 							valid2 = false;
 							continue;
 
@@ -116,9 +135,11 @@ public class AssemblerDriver {
 								hex = assemble.getHex();
 							}
 							catch(Exception e){
-								System.out.println("something went wrong, please review the errors then try again later");
+
+								System.err.println("something went wrong, please review the errors then try again later");
+								e.printStackTrace();
 								instruction.close();
-								System.out.println("fatal errors, shutting down....");
+								System.err.println("fatal errors, shutting down....");
 								System.exit(0);
 							}
 						}
@@ -132,15 +153,12 @@ public class AssemblerDriver {
 
 			System.out.println("writing to mif file...");
 
-			//final error check
-			if(hex.length()>6 ){
-				instruction.close();
-				throw new BadInstructionException("We can't write this instruction for some reason: \n \t Fatal Error Shutting down");
-			}
+						
 
 			try {
 				mif.append(line + "\t:\t" + hex +";\n");
-			} catch (IOException e) {
+			} 
+			catch (IOException e) {
 				e.printStackTrace();
 			}
 
@@ -154,7 +172,8 @@ public class AssemblerDriver {
 			mif.append("[" + line +"..1023]  :  000000;\n");
 			mif.append("END;");
 			mif.close();
-		} catch (IOException e) {
+		} 
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 		instruction.close();

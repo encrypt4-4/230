@@ -36,6 +36,7 @@ public class Assembler {
 	private String operation;//The input string for possible operations
 	private String binary;//The complete 24 bit instruction in binary
 	private String tBit;//the T bit flag for immediate values
+	private int imm; // an int back up of the binary
 
 	//constructor for user input in console
 	public Assembler(){
@@ -43,7 +44,7 @@ public class Assembler {
 		this.registerCode=" ";
 		this.sBit = "0";
 		this.immediate = "00000";
-	
+
 
 		//Double Op instruction table
 		INSTRUCTION_OP.put("add", "00011");
@@ -314,11 +315,38 @@ public class Assembler {
 	}
 
 	//Converts inputs from binary into hexadecimal outputs
-	public String getHex(){
+	public String getHex() throws BadInstructionException{
+		//breaking the binary instruction up into 6 4 bit sections to combat inaccuracy caused by direct conversion
 
-			setInstruction();
-			int instruction = Integer.parseInt(this.binary,2);
-			String hex = Integer.toHexString(instruction);
+		String hex1 = "";
+		String hex2 = "";
+		String hex3 = "";
+		String hex4 = "";
+		String hex5 = "";
+		String hex6 = "";
+
+		setInstruction();
+
+		if(this.binary.length()!= 24){
+			throw new BadInstructionException("This Instruction could not correctly be converted");
+		}
+
+		hex1 = this.binary.substring(0, 4);
+		hex2 = this.binary.substring(4, 8);
+		hex3 = this.binary.substring(8, 12);
+		hex4 = this.binary.substring(12, 16);
+		hex5 = this.binary.substring(16,20);
+		hex6 = this.binary.substring(20);
+
+
+		hex1 = Integer.toHexString(Integer.parseInt(hex1, 2));
+		hex2 = Integer.toHexString(Integer.parseInt(hex2, 2));
+		hex3 = Integer.toHexString(Integer.parseInt(hex3, 2));
+		hex4 = Integer.toHexString(Integer.parseInt(hex4, 2));
+		hex5 = Integer.toHexString(Integer.parseInt(hex5, 2));
+		hex6 = Integer.toHexString(Integer.parseInt(hex6, 2));
+
+		String hex = hex1 + hex2 + hex3 + hex4 + hex5 + hex6;
 
 
 		return hex;
@@ -328,30 +356,30 @@ public class Assembler {
 	{
 		System.out.println("setting type...");
 
-			switch(this.opCode.substring(0,2))
-			{
-			case "00":
-			{
-				this.type = "d";
-				break;
-			}
-			case "01":
-			{
-				this.type = "s";
-				break;
-			}
-			case "10": 
-			{
-				this.type = "j"; 
-				break;
-			}
-			default: 
-			{
-				throw new BadInstructionException("noncompatable type");
-			}
+		switch(this.opCode.substring(0,2))
+		{
+		case "00":
+		{
+			this.type = "d";
+			break;
+		}
+		case "01":
+		{
+			this.type = "s";
+			break;
+		}
+		case "10": 
+		{
+			this.type = "j"; 
+			break;
+		}
+		default: 
+		{
+			throw new BadInstructionException("noncompatable type");
+		}
 
-			}
-		
+		}
+
 	}
 	//takes the instruction input
 	private void setInstruction()
@@ -384,25 +412,32 @@ public class Assembler {
 		case "j":
 			this.binary = this.opCode + this.condition + this.label;
 		}
-		
+
 
 	}
 	//converts the immediate to binary for user input
 	public void setImmediate(int immediate) throws OverFlowException 
 	{ 
-		
-			if(immediate > 15){
-				throw new OverFlowException("immediate too large");
 
-			}
-			else if(immediate < -16){
-				throw new OverFlowException("immediate too small");
+		if(immediate > 15){
+			throw new OverFlowException("immediate too large");
+
+		}
+		else if(immediate < -16){
+			throw new OverFlowException("immediate too small");
+		}
+		else{
+			if(immediate >= 0){
+			this.imm = immediate;
+			String im =Integer.toBinaryString(immediate);
+			this.immediate = String.format( "%5s", im).replace(' ', '0');
 			}
 			else{
-				String im =Integer.toBinaryString(immediate);
-				this.immediate = String.format( "%5s", im).replace(' ', '0');
-
+				this.imm = immediate;
+				String im = Integer.toBinaryString(immediate);
+				this.immediate = im.substring(im.length()-5);
 			}
+		}
 
 	}
 	//sets the label to the desired pc value for jump instructions.
@@ -415,7 +450,7 @@ public class Assembler {
 		else{
 			lbl = Integer.toBinaryString(pc -1);
 			this.label = lbl.substring(lbl.length()-15);
-			
+
 		}
 
 	}
@@ -426,39 +461,60 @@ public class Assembler {
 	}
 	//for user input register setting, takes source and destination from driver class
 	public void setRegister(String source, String destination) throws RegisterNotFoundException, NumberFormatException, OverFlowException{
-		
-		//these two if statements should be handling offset values
-		if(source.contains("/(")){
-			source = source.substring(2,source.length()-2);
-			setImmediate(Integer.parseInt(source.substring(0,2)));
-			System.out.println(source);
-			System.out.println(this.immediate);
+
+		//source handling offset values
+		if(source.length()== 6){
+			if(source.charAt(2) == '('){
+				setImmediate(Integer.parseInt(source.substring(0,2)));
+				source = source.substring(3,source.length()-1);
+			}
+		}
+		else if(source.length()== 5){
+			if(source.charAt(1) == '('){
+				setImmediate(Integer.parseInt(source.substring(0,1)));
+				source = source.substring(2,source.length()-1);
+			}
+		}
+		else if(source.length()== 7){
+			if(source.charAt(3) == '('){
+				setImmediate(Integer.parseInt(source.substring(0,3)));
+				source = source.substring(4,source.length()-1);
+			}
 		}
 		
-		if(destination.contains("/(")){
-			destination = destination.substring(2,destination.length()-2);
-			setImmediate(Integer.parseInt(destination.substring(0,2)));
+		//destination offset handle
+		if(destination.length()== 6){
+			if(destination.charAt(2) == '('){
+				setImmediate(Integer.parseInt(destination.substring(0,2)));
+				destination = destination.substring(3,destination.length()-1);
+			}
 		}
-		
-		
+		else if(destination.length()== 5){
+			if(destination.charAt(1) == '('){
+				setImmediate(Integer.parseInt(destination.substring(0,1)));
+				destination = destination.substring(2,destination.length()-1);
+			}
+		}
+		else if(destination.length()== 7){
+			if(destination.charAt(3) == '('){
+				setImmediate(Integer.parseInt(destination.substring(0,3)));
+				destination = destination.substring(4,destination.length()-1);
+			}
+		}
+
 		if(this.type.equals("d")){
-			try{
-				this.src = (String) REGISTER_LOCATIONS.get(source);
-				this.dst = (String) REGISTER_LOCATIONS.get(destination);
-			}
-			catch(Exception e){
-				System.out.println("Something went wrong with your register input, please try again");
-				e.printStackTrace();
-			}
+
+			this.src = (String) REGISTER_LOCATIONS.get(source);
+			this.dst = (String) REGISTER_LOCATIONS.get(destination);
+
 		}
 		else if(this.type.equals("s")){
-			try{
-				this.src = (String) REGISTER_LOCATIONS.get(source);
-			}
-			catch(Exception e){
-				System.out.println("Something went wrong with your register input, please try again");
-				e.printStackTrace();
-			}
+
+			this.src = (String) REGISTER_LOCATIONS.get(source);
+
+
+
+
 		}
 		else if(destination.equals("r0")){ //Make sure this matches expected outputs to check source and destination errors
 			throw new RegisterNotFoundException("This register is not accessble in this context");
@@ -468,6 +524,10 @@ public class Assembler {
 		}
 
 
+	}
+	//set register for single ops
+	public void setRegister(String source){
+		this.src = (String) REGISTER_LOCATIONS.get(source);
 	}
 	//set condition for file
 	private void setCondition() throws BadInstructionException{
@@ -520,17 +580,17 @@ public class Assembler {
 	public void setOperation(String op) throws NumberFormatException, OverFlowException, BadInstructionException{
 
 
-	
-			this.operation = op;
-			this.opCode = (String)INSTRUCTION_OP.get(this.operation);
-			if(opCode == null){
-				throw new BadInstructionException("That instruction does not exist");
-			}
-			setType();
-			setCondition();
+
+		this.operation = op;
+		this.opCode = (String)INSTRUCTION_OP.get(this.operation);
+		if(opCode == null){
+			throw new BadInstructionException("That instruction does not exist");
+		}
+		setType();
+		setCondition();
 
 
-		
+
 
 	}
 	private void setT(){
@@ -540,7 +600,7 @@ public class Assembler {
 		return this.type;
 	}
 	public int getImmediate(){
-		int immval = Integer.parseInt(this.immediate,2);
-		return immval;
+		
+		return this.imm;
 	}
 }
